@@ -8,6 +8,8 @@ physfix = {editable = true, path = "."}
 mypy = "*"
 flake8 = "*"
 tox = "*"
+pep8-naming = "*"
+flake8-simplify = "*"
 
 [dev-packages]
 

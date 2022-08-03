@@ -940,7 +940,7 @@ def print_AST(function_body):
             if b.next:
                 print_AST([b.next])
 
-if __name__ == "__main__":
+def main():
     # test_path = "/home/rewong/phys/ryan/control_flow/dump_to_ast_test/test_19.cpp.dump"
     # test_path = "/home/rewong//phys/data/jaguar_base/src/motor_and_sensors_controller.cpp.dump"
     test_path = "/home/rewong/phys/data/FrenchVanilla/src/turtlebot_example/src/turtlebot_example_node.cpp.dump"
