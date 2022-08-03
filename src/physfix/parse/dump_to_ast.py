@@ -5,11 +5,13 @@ import json
 from typing import Dict, List
 
 import yaml
-from cpp_parser import CppcheckData, Token
-from cpp_utils import get_statement_tokens, tokens_to_str, get_functions, get_root_tokens
-from scope_node import ScopeNode
-from statement import (Statement, IfStatement, BlockStatement, ForStatement, 
-FunctionDeclaration, SwitchStatment, WhileStatement)
+
+from .cpp_parser import CppcheckData, Token
+from .cpp_utils import (get_functions, get_root_tokens, get_statement_tokens,
+                        tokens_to_str)
+from .scope_node import ScopeNode
+from .statement import (BlockStatement, ForStatement, FunctionDeclaration,
+                        IfStatement, Statement, SwitchStatment, WhileStatement)
 
 
 class DumpToAST:

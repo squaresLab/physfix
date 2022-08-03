@@ -5,8 +5,9 @@ from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Union
 
 import attr
-from cpp_parser import Scope, Token
-from scope_node import ScopeNode
+
+from .cpp_parser import Scope, Token
+from .scope_node import ScopeNode
 
 
 class Statement(ABC):

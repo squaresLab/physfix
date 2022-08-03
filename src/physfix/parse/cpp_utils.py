@@ -1,6 +1,6 @@
-from typing import List, Set, Union, Dict
+from typing import Dict, List, Set, Union
 
-from cpp_parser import Token, Variable, Configuration, Scope
+from .cpp_parser import Configuration, Scope, Token, Variable
 
 
 def get_statement_tokens(token: Token) -> List[Token]:

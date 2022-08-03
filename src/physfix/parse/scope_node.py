@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import List, Union
 
-from cpp_parser import Scope, Configuration
+from .cpp_parser import Configuration, Scope
 
 
 class ScopeNode:
