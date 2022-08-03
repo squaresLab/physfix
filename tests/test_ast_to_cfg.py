@@ -1,7 +1,7 @@
 import unittest
 import yaml
 from yaml.loader import SafeLoader
-from ast_to_cfg import ASTToCFG
+from physfix.src.physfix.ast_to_cfg import ASTToCFG
 
 class TestASTToCFG(unittest.TestCase):
     def test(self):

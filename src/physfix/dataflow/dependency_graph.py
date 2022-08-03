@@ -5,7 +5,7 @@ from typing import Dict, List, Tuple, Set
 
 import attr
 
-from ast_to_cfg import ASTToCFG, CFGNode, FunctionCFG
+from physfix.src.physfix.ast_to_cfg import ASTToCFG, CFGNode, FunctionCFG
 from cpp_parser import Variable
 from cpp_utils import (get_LHS_from_statement, get_RHS_from_statement,
                        get_statement_tokens, get_vars_from_statement)

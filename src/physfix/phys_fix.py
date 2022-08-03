@@ -7,7 +7,7 @@ from lxml import etree
 
 import attr
 
-from ast_to_cfg import ASTToCFG, CFGNode, FunctionCFG
+from physfix.src.physfix.ast_to_cfg import ASTToCFG, CFGNode, FunctionCFG
 from phys.physfix.parse.cpp_utils import get_root_token, get_statement_tokens, token_to_stmt_str, tokens_to_str
 from dependency_graph import CFGToDependencyGraph, DependencyGraph, DependencyNode
 from fix_addition_subtraction import fix_addition_subtraction
