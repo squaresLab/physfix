@@ -1,12 +1,4 @@
-import os
-from glob import glob
-from setuptools import setup, find_packages
+#!/usr/bin/env python
+import setuptools
 
-path = os.path.join(os.path.dirname(__file__), 'src/physfix/version.py')
-with open(path, 'r') as f:
-    exec(f.read())
-
-setup(
-    version=__version__,
-    include_package_data=True
-)
+setuptools.setup()
