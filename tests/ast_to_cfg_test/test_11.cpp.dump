@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<dumps>
+<dump cfg="">
+  <tokenlist>
+    <token id="0x2812a70" file="test_11.cpp" linenr="1" str="bool" scope="0x2810170" type="name"/>
+    <token id="0x2812b20" file="test_11.cpp" linenr="1" str="is_negative" scope="0x2810170" type="name" function="0x2802470" astParent="0x2812800"/>
+    <token id="0x2812800" file="test_11.cpp" linenr="1" str="(" scope="0x2810170" link="0x2810320" astOperand1="0x2812b20" astOperand2="0x2812960"/>
+    <token id="0x28128b0" file="test_11.cpp" linenr="1" str="int" scope="0x2810170" type="name"/>
+    <token id="0x2812960" file="test_11.cpp" linenr="1" str="x" scope="0x2810170" type="name" varId="1" variable="0x2808ec0" astParent="0x2812800"/>
+    <token id="0x2810320" file="test_11.cpp" linenr="1" str=")" scope="0x2810170" link="0x2812800"/>
+    <token id="0x28103d0" file="test_11.cpp" linenr="1" str="{" scope="0x2813df0" link="0x2813ad0"/>
+    <token id="0x2810480" file="test_11.cpp" linenr="2" str="if" scope="0x2813df0" type="name" astParent="0x2812f20"/>
+    <token id="0x2812f20" file="test_11.cpp" linenr="2" str="(" scope="0x2813df0" link="0x2813290" astOperand1="0x2810480" astOperand2="0x2813080"/>
+    <token id="0x2812fd0" file="test_11.cpp" linenr="2" str="x" scope="0x2813df0" type="name" varId="1" variable="0x2808ec0" values="0x2812fd8" astParent="0x2813080"/>
+    <token id="0x2813080" file="test_11.cpp" linenr="2" str="&gt;=" scope="0x2813df0" type="op" isComparisonOp="True" values="0x2813088" astParent="0x2812f20" astOperand1="0x2812fd0" astOperand2="0x28131e0"/>
+    <token id="0x28131e0" file="test_11.cpp" linenr="2" str="0" scope="0x2813df0" type="number" isInt="True" values="0x28131e8" astParent="0x2813080"/>
+    <token id="0x2813290" file="test_11.cpp" linenr="2" str=")" scope="0x2813df0" link="0x2812f20"/>
+    <token id="0x2813340" file="test_11.cpp" linenr="2" str="{" scope="0x2814050" link="0x2813600"/>
+    <token id="0x28133f0" file="test_11.cpp" linenr="3" str="return" scope="0x2814050" type="name" astOperand1="0x28134a0"/>
+    <token id="0x28134a0" file="test_11.cpp" linenr="3" str="false" scope="0x2814050" type="name" values="0x28134a8" astParent="0x28133f0"/>
+    <token id="0x2813550" file="test_11.cpp" linenr="3" str=";" scope="0x2814050"/>
+    <token id="0x2813600" file="test_11.cpp" linenr="4" str="}" scope="0x2814050" link="0x2813340"/>
+    <token id="0x28136b0" file="test_11.cpp" linenr="4" str="else" scope="0x2813df0" type="name"/>
+    <token id="0x2813760" file="test_11.cpp" linenr="4" str="{" scope="0x28142b0" link="0x2813a20"/>
+    <token id="0x2813810" file="test_11.cpp" linenr="5" str="return" scope="0x28142b0" type="name" astOperand1="0x28138c0"/>
+    <token id="0x28138c0" file="test_11.cpp" linenr="5" str="true" scope="0x28142b0" type="name" values="0x28138c8" astParent="0x2813810"/>
+    <token id="0x2813970" file="test_11.cpp" linenr="5" str=";" scope="0x28142b0"/>
+    <token id="0x2813a20" file="test_11.cpp" linenr="6" str="}" scope="0x28142b0" link="0x2813760"/>
+    <token id="0x2813ad0" file="test_11.cpp" linenr="7" str="}" scope="0x2813df0" link="0x28103d0"/>
+  </tokenlist>
+  <scopes>
+    <scope id="0x2810170" type="Global">
+      <functionList>
+        <function id="0x2802470" tokenDef="0x2812b20" name="is_negative">
+          <arg nr="1" variable="0x2808ec0"/>
+        </function>
+      </functionList>
+    </scope>
+    <scope id="0x2813df0" type="Function" className="is_negative" classStart="0x28103d0" classEnd="0x2813ad0" nestedIn="0x2810170" function="0x2802470"/>
+    <scope id="0x2814050" type="If" classStart="0x2813340" classEnd="0x2813600" nestedIn="0x2813df0"/>
+    <scope id="0x2813b90" type="Else" classStart="0x2813760" classEnd="0x2813a20" nestedIn="0x2813df0"/>
+    <scope id="0x28142b0" type="Try" classStart="0x2813760" classEnd="0x2813a20" nestedIn="0x2813df0"/>
+  </scopes>
+  <variables>
+    <var id="0x2808ec0" nameToken="0x2812960" typeStartToken="0x28128b0" typeEndToken="0x28128b0" isArgument="true" isArray="false" isClass="false" isLocal="false" isPointer="false" isReference="false" isStatic="false"/>
+  </variables>
+  <valueflow>
+    <values id="0x2812fd8">
+      <value intvalue="0" condition-line="2" possible="true"/>
+    </values>
+    <values id="0x2813088">
+      <value intvalue="1" condition-line="2" possible="true"/>
+    </values>
+    <values id="0x28131e8">
+      <value intvalue="0" known="true"/>
+    </values>
+    <values id="0x28134a8">
+      <value intvalue="0" known="true"/>
+    </values>
+    <values id="0x28138c8">
+      <value intvalue="1" known="true"/>
+    </values>
+  </valueflow>
+</dump>
+</dumps>

@@ -1,0 +1,23 @@
+---
+- function:
+    name: "goal_d"
+    body:
+    - block: vel_x = 0
+    - block: vel_y = 0
+    - if:
+        condition: vel_x == 1
+        condition_true:
+        - block: vel_y = 1
+        - if:
+            condition: vel_x == 0
+            condition_true: 
+            - block: vel_y = 10
+            condition_false: []
+        - block: vel_y = 7
+        condition_false:
+        - if:
+            condition: vel_x == 7
+            condition_true:
+            - block: vel_y = 7
+            condition_false:
+            - block: vel_y = 10

@@ -1,0 +1,9 @@
+---
+- function:
+    name: goal_d
+    body:
+    - block: vel_x = 0
+    - block: ang_z = 0
+    - block: err_x = 0
+    - block: err_y = err_x + ang_z
+    - block: vel_x = ang_z + err_x

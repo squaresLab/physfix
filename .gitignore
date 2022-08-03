@@ -1,0 +1,6 @@
+*.pyc
+*.json
+*.pkl
+*.txt
+__pycache__
+!requirements.txt

@@ -1,0 +1,7 @@
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+        <xsl:template match="@*|node()">
+            <xsl:copy>
+                <xsl:apply-templates select="@*|node()"/>
+            </xsl:copy>
+        </xsl:template>
+    <xsl:template match="//call[@start='32:9'][@end='32:22']"><name>x_t</name><operator>*</operator><name>mult<argument_list>(<argument><expr><name>err_x</name></expr></argument>,<argument><expr><literal>5</literal></expr></argument></argument_list>)</name></xsl:template></xsl:stylesheet>

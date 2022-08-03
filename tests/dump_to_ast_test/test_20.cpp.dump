@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<dumps>
+<dump cfg="">
+  <tokenlist>
+    <token id="0x17514c0" file="test_20.cpp" linenr="1" str="void" scope="0x1762890" type="name"/>
+    <token id="0x175f320" file="test_20.cpp" linenr="1" str="goal_d" scope="0x1762890" type="name" function="0x17629c0" astParent="0x175f3d0"/>
+    <token id="0x175f3d0" file="test_20.cpp" linenr="1" str="(" scope="0x1762890" link="0x1761f40" astOperand1="0x175f320" astOperand2="0x1761d30"/>
+    <token id="0x175f480" file="test_20.cpp" linenr="1" str="double" scope="0x1762890" type="name"/>
+    <token id="0x1761a70" file="test_20.cpp" linenr="1" str="x_t" scope="0x1762890" type="name" varId="1" variable="0x1761970" astParent="0x1761b20"/>
+    <token id="0x1761b20" file="test_20.cpp" linenr="1" str="," scope="0x1762890" astParent="0x1761d30" astOperand1="0x1761a70" astOperand2="0x1761c80"/>
+    <token id="0x1761bd0" file="test_20.cpp" linenr="1" str="double" scope="0x1762890" type="name"/>
+    <token id="0x1761c80" file="test_20.cpp" linenr="1" str="y_t" scope="0x1762890" type="name" varId="2" variable="0x1762c20" astParent="0x1761b20"/>
+    <token id="0x1761d30" file="test_20.cpp" linenr="1" str="," scope="0x1762890" astParent="0x175f3d0" astOperand1="0x1761b20" astOperand2="0x1761e90"/>
+    <token id="0x1761de0" file="test_20.cpp" linenr="1" str="double" scope="0x1762890" type="name"/>
+    <token id="0x1761e90" file="test_20.cpp" linenr="1" str="t" scope="0x1762890" type="name" varId="3" variable="0x1762c90" astParent="0x1761d30"/>
+    <token id="0x1761f40" file="test_20.cpp" linenr="1" str=")" scope="0x1762890" link="0x175f3d0"/>
+    <token id="0x1761ff0" file="test_20.cpp" linenr="2" str="{" scope="0x1762af0" link="0x1762570"/>
+    <token id="0x17620a0" file="test_20.cpp" linenr="3" str="a" scope="0x1762af0" type="name" astParent="0x1762150"/>
+    <token id="0x1762150" file="test_20.cpp" linenr="3" str="*" scope="0x1762af0" type="op" isArithmeticalOp="True" astParent="0x17622b0" astOperand1="0x17620a0" astOperand2="0x1762200"/>
+    <token id="0x1762200" file="test_20.cpp" linenr="3" str="b" scope="0x1762af0" type="name" astParent="0x1762150"/>
+    <token id="0x17622b0" file="test_20.cpp" linenr="3" str="+" scope="0x1762af0" type="op" isArithmeticalOp="True" astParent="0x1762410" astOperand1="0x1762150" astOperand2="0x1762360"/>
+    <token id="0x1762360" file="test_20.cpp" linenr="3" str="c" scope="0x1762af0" type="name" astParent="0x17622b0"/>
+    <token id="0x1762410" file="test_20.cpp" linenr="3" str="+" scope="0x1762af0" type="op" isArithmeticalOp="True" astOperand1="0x17622b0" astOperand2="0x17624c0"/>
+    <token id="0x17624c0" file="test_20.cpp" linenr="3" str="d" scope="0x1762af0" type="name" astParent="0x1762410"/>
+    <token id="0x1762570" file="test_20.cpp" linenr="5" str="}" scope="0x1762af0" link="0x1761ff0"/>
+  </tokenlist>
+  <scopes>
+    <scope id="0x1762890" type="Global">
+      <functionList>
+        <function id="0x17629c0" tokenDef="0x175f320" name="goal_d">
+          <arg nr="1" variable="0x1761970"/>
+          <arg nr="2" variable="0x1762c20"/>
+          <arg nr="3" variable="0x1762c90"/>
+        </function>
+      </functionList>
+    </scope>
+    <scope id="0x1762af0" type="Function" className="goal_d" classStart="0x1761ff0" classEnd="0x1762570" nestedIn="0x1762890" function="0x17629c0"/>
+  </scopes>
+  <variables>
+    <var id="0x1761970" nameToken="0x1761a70" typeStartToken="0x175f480" typeEndToken="0x175f480" isArgument="true" isArray="false" isClass="false" isLocal="false" isPointer="false" isReference="false" isStatic="false"/>
+    <var id="0x1762c20" nameToken="0x1761c80" typeStartToken="0x1761bd0" typeEndToken="0x1761bd0" isArgument="true" isArray="false" isClass="false" isLocal="false" isPointer="false" isReference="false" isStatic="false"/>
+    <var id="0x1762c90" nameToken="0x1761e90" typeStartToken="0x1761de0" typeEndToken="0x1761de0" isArgument="true" isArray="false" isClass="false" isLocal="false" isPointer="false" isReference="false" isStatic="false"/>
+  </variables>
+  <valueflow>
+  </valueflow>
+</dump>
+</dumps>

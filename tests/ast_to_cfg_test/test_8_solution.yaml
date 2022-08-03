@@ -1,0 +1,120 @@
+---
+- 0:
+    entry:
+        name: goal_d
+        arguments:
+        - x_t
+        - y_t
+        - t
+    next: [1]
+    previous: []
+  1:
+    basic:
+        token: err_y = err_x + ang_z
+    next: [2]
+    previous: [0]
+  2:
+    conditional:
+        condition: vel_x < 0
+        condition_true:
+            basic:
+                token: vel_x = ang_z + err_x
+        condition_false:
+            conditional:
+                condition: vel_x > 0
+                condition_true:
+                    basic:
+                        token: vel_x = vel_x + err_y
+                condition_false:
+                    basic:
+                        token: ang_z = 10
+    next: [3, 8]
+    previous: [1]
+  3:
+    basic:
+        token: vel_x = ang_z + err_x
+    next: [4]
+    previous: [2]
+  4:
+    conditional:
+      condition: ang_z < 0
+      condition_true:
+        basic:
+          token: vel_x = 10
+      condition_false:
+        basic:
+          token: vel_x = -10
+    next: [5, 6]
+    previous: [3]
+  5:
+    basic:
+      token: vel_x = 10
+    next: [7]
+    previous: [4]
+  6:
+    basic:
+      token: vel_x = -10
+    next: [7]
+    previous: [4]
+  7:
+    join: {}
+    next: [16]
+    previous: [5, 6]
+  8:
+    conditional:
+        condition: vel_x > 0
+        condition_true:
+            basic:
+                token: vel_x = vel_x + err_y
+        condition_false:
+            basic:
+                token: ang_z = 10
+    next: [9, 10]
+    previous: [2]
+  9:
+    basic:
+        token: vel_x = vel_x + err_y
+    next: [15]
+    previous: [8]
+  10:
+    basic:
+        token: ang_z = 10
+    next: [11]
+    previous: [8]
+  11:
+    conditional:
+      condition: ang_z > 0
+      condition_true:
+        basic:
+          token: ang_z -= 1
+      condition_false:
+        empty: {}
+    next: [12, 13]
+    previous: [10, 12]
+  12:
+    basic:
+      token: ang_z -= 1
+    next: [11]
+    previous: [11]
+  13:
+    empty: {}
+    next: [14]
+    previous: [11]
+  14:
+    join: {}
+    next: [15]
+    previous: [13]
+  15:
+    join: {}
+    next: [16]
+    previous: [9, 14]
+  16:
+    join: {}
+    next: [17]
+    previous: [7 ,15]
+  17:
+    exit:
+        name: goal_d
+    next: []
+    previous: [16]
+                            

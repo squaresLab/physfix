@@ -1,0 +1,52 @@
+---
+- 0:
+    entry:
+      name: gcd
+      arguments:
+      - x
+      - y
+    next: [1]
+    previous: []
+  1:
+    conditional:
+      condition: y != 0
+      condition_true:
+        basic:
+          token: tmp = x % y
+      condition_false:
+        empty: {}
+    next: [2, 5]
+    previous: [0, 4]
+  2:
+    basic:
+      token: tmp = x % y
+    next: [3]
+    previous: [1]
+  3:
+    basic:
+      token: x = y
+    next: [4]
+    previous: [2]
+  4:
+    basic:
+      token: y = tmp
+    next: [1]
+    previous: [3]
+  5:
+    empty: {}
+    next: [6]
+    previous: [1]
+  6:
+    join: {}
+    next: [7]
+    previous: [5]
+  7:
+    basic:
+      token: x return
+    next: [8]
+    previous: [6]
+  8:
+    exit:
+      name: gcd
+    next: []
+    previous: [7]

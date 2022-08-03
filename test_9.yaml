@@ -1,0 +1,110 @@
+- function:
+    body:
+    - block: X = 0.0
+    - block: Y = 0.0
+    - block: yaw_degrees = 0.0
+    - block: state = 0
+    - block: err_d = 0.0
+    - block: err_x = 0.0
+    - block: err_y = 0.0
+    - block: err_yaw = 0.0
+    - block: vel_y = 0.0
+    - block: vel_x = 0.0
+    - block: ang_z = 0.0
+    - block: err_x = x_t - X
+    - block: err_y = y_t - Y
+    - block: err_d = sqrt ( err_x * err_x + err_y + err_y
+    - block: err_yaw = t - yaw_degrees
+    - if:
+        condition: err_x > 0.1 || err_y > 0.1
+        condition_false:
+        - if:
+            condition: err_yaw > 2
+            condition_false: []
+            condition_true:
+            - block: vel_x = 0.0
+        condition_true:
+        - block: vel_x = 0.3
+        - block: ang_z = 0.0
+    - block: ang_z = 0.15
+    - block: state = state + 1 % 8
+    - block: ang_z = 0.0
+    - block: vel_x = 0.0
+    - block: ROS_INFO ( "3..S=%d" , state
+    name: goal_d
+- function:
+    body:
+    - block: X = msg . pose . pose . position . x
+    - block: Y = msg . pose . pose . position . y
+    - block: 'Yaw = tf :: getYaw ( msg . pose . pose . orientation'
+    - block: yaw_degrees = Yaw * 180.0 / M_PI
+    - block: yaw_degrees += 360.0
+    - if:
+        condition: yaw_degrees < 0
+        condition_false: []
+        condition_true: []
+    - block: 'ROS_INFO ( "pose_callback X: %f Y: %f Yaw: %f" , X , Y , yaw_degrees'
+    name: pose_callback
+- function:
+    body:
+    - block: 'ros :: init ( argc , argv , "main_control"'
+    - block: 'ros :: n'
+    - block: 'ros :: pose_sub'
+    - block: pose_sub = n . subscribe ( "/amcl_pose" , 1 , pose_callback
+    - block: 'ros :: velocity_publisher'
+    - block: velocity_publisher = n . advertise ( "/cmd_vel_mux/input/navi" , 1
+    - block: 'geometry_msgs :: vel'
+    - block: 'ros :: loop_rate ( 20'
+    - while:
+        condition: 'ros :: ok ('
+        condition_true:
+        - block: loop_rate . sleep (
+        - block: 'ros :: spinOnce ('
+        - if:
+            condition: state == 0
+            condition_false:
+            - if:
+                condition: state == 1
+                condition_false:
+                - if:
+                    condition: state == 2
+                    condition_false:
+                    - if:
+                        condition: state == 3
+                        condition_false:
+                        - if:
+                            condition: state == 4
+                            condition_false:
+                            - if:
+                                condition: state == 5
+                                condition_false:
+                                - if:
+                                    condition: state == 6
+                                    condition_false:
+                                    - if:
+                                        condition: state == 7
+                                        condition_false:
+                                        - block: ROS_INFO ( "DEfaultt"
+                                        condition_true:
+                                        - block: goal_d ( 0 , 0 , 358
+                                    condition_true:
+                                    - block: goal_d ( 0 , 0 , 270
+                                condition_true:
+                                - block: goal_d ( 0 , 1 , 270
+                            condition_true:
+                            - block: goal_d ( 0 , 1 , 180
+                        condition_true:
+                        - block: goal_d ( 1 , 1 , 180
+                    condition_true:
+                    - block: goal_d ( 1 , 1 , 90
+                condition_true:
+                - block: goal_d ( 1 , 0 , 90
+            condition_true:
+            - block: goal_d ( 1 , 0 , 0
+        - block: vel . linear . x = vel_x
+        - block: vel . angular . z = ang_z
+        - block: velocity_publisher . publish ( vel
+        - block: 'ROS_DEBUG ( "Main - Velocity commands: v - %f, w - %f" , vel . linear
+            . x , vel . angular . z'
+    - block: 0 return
+    name: main

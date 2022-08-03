@@ -1,0 +1,55 @@
+0:
+  node:
+    entry:
+      name: goal_d
+      arguments: [x_t, y_t, t]
+  variable: t
+  next: []
+  previous: []
+1:
+  node:
+    entry:
+      name: goal_d
+      arguments: [x_t, y_t, t]
+  variable: x_t
+  next: []
+  previous: []
+2:
+  node:
+    entry:
+      name: goal_d
+      arguments: [x_t, y_t, t]
+  variable: y_t
+  next: []
+  previous: []
+
+3:
+  node:
+    basic:
+      token: vel_x = 0
+  variable: vel_x
+  next: [6]
+  previous: []
+4:
+  node:
+    basic:
+      token: vel_y = 10
+  variable: vel_y
+  next: []
+  previous: []
+5:
+  node:
+    basic:
+      token: vel_y = 20
+  variable: vel_y
+  next: [6]
+  previous: []
+6:
+  node:
+    basic:
+      token: err = vel_x + vel_y
+  variable: err
+  next: []
+  previous: [3 ,5]
+  
+

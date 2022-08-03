@@ -1,0 +1,32 @@
+---
+- function:
+    name: goal_d
+    body:
+    - block: vel_x = 0
+    - block: ang_z = 0
+    - block: err_x = 0
+    - block: err_y = err_x + ang_z
+    - if:
+        condition: vel_x < 0
+        condition_true: 
+        - block: vel_x = ang_z + err_x
+        - if:
+            condition: ang_z < 0
+            condition_true:
+              - block: vel_x = 10
+            condition_false:
+              - block: vel_x = -10
+        condition_false:
+        - if:
+            condition: vel_x > 0
+            condition_true:
+            - block: vel_x = vel_x + err_y
+            condition_false:
+            - block: ang_z = 10
+            - if:
+                condition: err_x < 0
+                condition_true: 
+                - block: vel_x = 50
+                condition_false:
+                - block: vel_x = -50
+                
