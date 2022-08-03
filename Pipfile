@@ -5,6 +5,9 @@ name = "pypi"
 
 [packages]
 physfix = {editable = true, path = "."}
+mypy = "*"
+flake8 = "*"
+tox = "*"
 
 [dev-packages]
 

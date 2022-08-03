@@ -5,3 +5,5 @@
 *.txt
 __pycache__
 !requirements.txt
+build
+.tox
