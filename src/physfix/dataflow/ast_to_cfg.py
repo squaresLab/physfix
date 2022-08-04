@@ -255,8 +255,10 @@ class ASTToCFG:
 def main():
     # e_count = 0
     test_path = f"/home/rewong/physfix/tests/ast_to_cfg_test/test_12.cpp.dump"
-    parsed = ASTToCFG.convert(test_path)
-    print(parsed[0].nodes)
+    dump_to_ast = DumpToAST(test_path)
+    ast_to_cfg = ASTToCFG(dump_to_ast)
+    cfg = ast_to_cfg.convert()
+    print(cfg)
     # print(parsed[0].to_dict())
     # ASTToCFG.write(parsed, "test_2.yaml")
     # e_count = 0
