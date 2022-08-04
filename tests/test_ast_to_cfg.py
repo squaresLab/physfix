@@ -1,19 +1,28 @@
+import os
 import unittest
+
 import yaml
+from physfix.dataflow.ast_to_cfg import ASTToCFG
+from physfix.parse.dump_to_ast import DumpToAST
 from yaml.loader import SafeLoader
-from physfix.src.physfix.ast_to_cfg import ASTToCFG
+
+DIR_HERE = os.path.dirname(__file__)
 
 class TestASTToCFG(unittest.TestCase):
     def test(self):
         for i in range(1, 15):
             print(f"=====Testing {i}=====")
-            test_path = f"./ast_to_cfg_test/test_{i}.cpp.dump"
-            sol_path = f"./ast_to_cfg_test/test_{i}_solution.yaml"
-            cfg = ASTToCFG.convert(test_path)
+            test_path = os.path.join(DIR_HERE, "ast_to_cfg_test", f"test_{i}.cpp.dump")
+            sol_path = os.path.join(DIR_HERE, "ast_to_cfg_test", f"test_{i}_solution.yaml")
+
+            dump_to_ast = DumpToAST(test_path)
+            ast_to_cfg = ASTToCFG(dump_to_ast)
+            ast_to_cfg_2 = ASTToCFG(dump_to_ast)
+            cfg = ast_to_cfg.convert()
             cfg_dict = [f.to_dict() for f in cfg]
 
             # Making sure that .to_dict returns same thing each time
-            cfg2 = ASTToCFG.convert(test_path)
+            cfg2 = ast_to_cfg_2.convert()
             cfg_dict2 = [f.to_dict() for f in cfg2]
 
             # print(cfg_dict)
@@ -24,13 +33,13 @@ class TestASTToCFG(unittest.TestCase):
             with open(sol_path) as f:
                 sol_dict = yaml.load(f, Loader=SafeLoader)
             
-            for k, v in cfg_dict[0].items():
-                print("____")
-                print(k)
-                print("Code solution")
-                print(v)
-                print("Written solution")
-                print(sol_dict[0][k])
+            # for k, v in cfg_dict[0].items():
+            #     print("____")
+            #     print(k)
+            #     print("Code solution")
+            #     print(v)
+            #     print("Written solution")
+            #     print(sol_dict[0][k])
             self.assertEqual(cfg_dict, sol_dict)
             # self.compare_inputs(cfg_dict, sol_dict)
 
