@@ -5,6 +5,7 @@ from typing import Dict, List, Set
 
 import attr
 from physfix.parse.cpp_parser import Variable
+from physfix.parse.dump_to_ast import DumpToAST
 from physfix.dataflow.ast_to_cfg import ASTToCFG, CFGNode, FunctionCFG
 from physfix.dataflow.reach_def import (ReachDef, DefUsePair, 
                                         create_def_use_pairs, create_reach_definitions)
@@ -169,7 +170,7 @@ class CFGToDependencyGraph:
         self.function_cfgs = self.ast_to_cfg.function_cfgs
         self.dependency_graph = []
 
-    def create(self):
+    def convert(self):
         """Returns dependency graphs for all function CFGs"""
         dependency_graphs = [self._create_dependency_graph(c) for c in self.function_cfgs]
         self.dependency_graph.extend(dependency_graphs)
@@ -191,7 +192,7 @@ class CFGToDependencyGraph:
 
             if not cur_def:
                 continue
-            
+
             for r in reach_def:
                 reach_var = r.variable
                 # If the variable is killed by the statement or if variable isn't used in statement
@@ -230,8 +231,13 @@ class CFGToDependencyGraph:
         return dependency_graph
 
 
-if __name__ == "__main__":
-    cfg = ASTToCFG.convert("/home/rewong/phys/ryan/control_flow/data_dependency_test/test_2.cpp.dump")
+def main():
+    test_path = "/home/rewong/physfix/tests/data_dependency_test/test_2.cpp.dump"
+    dump_to_ast = DumpToAST(test_path)
+    ast_to_cfg = ASTToCFG(dump_to_ast)
+    cfg_to_dependency = CFGToDependencyGraph(ast_to_cfg)
+    dependency_graph = cfg_to_dependency.convert()
+    print(dependency_graph)
     # p = create_def_use_pairs(cfg[0])
     # print(p)
     # print("____")

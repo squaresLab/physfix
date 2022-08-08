@@ -5,7 +5,7 @@ from typing import Dict, Set, Tuple
 
 import attr
 from physfix.parse.cpp_parser import Variable
-from physfix.parse.cpp_utils import (get_LHS_from_statement, get_RHS_from_statement,
+from physfix.parse.cpp_utils import (get_lhs_from_statement, get_rhs_from_statement,
                                      get_statement_tokens, get_vars_from_statement)
 from physfix.dataflow.ast_to_cfg import CFGNode, FunctionCFG
 
@@ -46,8 +46,8 @@ def create_def_use_pairs(cfg: FunctionCFG) -> Dict[CFGNode, DefUsePair]:
             block_def_use.define.update(cur.function_arguments)
         elif cur_type == "basic":
             statement = get_statement_tokens(cur.token)
-            lhs = get_LHS_from_statement(statement)
-            rhs = get_RHS_from_statement(statement)
+            lhs = get_lhs_from_statement(statement)
+            rhs = get_rhs_from_statement(statement)
 
             if lhs:
                 block_def_use.define.update(get_vars_from_statement(lhs))
