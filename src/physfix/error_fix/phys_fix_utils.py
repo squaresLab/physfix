@@ -6,10 +6,10 @@ from typing import Dict, List, Set
 
 import attr
 
-from dependency_graph import DependencyNode, DependencyGraph
-from physfix.src.physfix.ast_to_cfg import CFGNode
-from phys.physfix.parse.cpp_parser import Token
-from phys.physfix.parse.cpp_utils import get_statement_tokens
+from physfix.dataflow.dependency_graph import DependencyNode, DependencyGraph
+from physfix.dataflow.ast_to_cfg import CFGNode
+from physfix.parse.cpp_parser import Token
+from physfix.parse.cpp_utils import get_statement_tokens
 
 
 @attr.s()

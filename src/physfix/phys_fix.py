@@ -1,22 +1,53 @@
 from __future__ import annotations
 
-import json
+import os
+import shutil
+import subprocess
 from collections import deque
-from typing import Dict, List, Set
+
 from lxml import etree
 
-import attr
+from physfix.dataflow.ast_to_cfg import ASTToCFG
+from physfix.dataflow.dependency_graph import CFGToDependencyGraph
+from physfix.error_fix.fix_addition_subtraction import fix_addition_subtraction
+from physfix.error_fix.phys_fix_utils import (Change, Error, PhysVar,
+                                              get_error_dependency_node,
+                                              get_token_unit_map)
+from physfix.parse.cpp_parser import CppcheckData
+from physfix.parse.cpp_utils import get_root_token, get_statement_tokens
 
-from physfix.src.physfix.ast_to_cfg import ASTToCFG, CFGNode, FunctionCFG
-from phys.physfix.parse.cpp_utils import get_root_token, get_statement_tokens, token_to_stmt_str, tokens_to_str
-from dependency_graph import CFGToDependencyGraph, DependencyGraph, DependencyNode
-from fix_addition_subtraction import fix_addition_subtraction
-from phys.physfix.parse.cpp_parser import CppcheckData
-from phys_fix_utils import Error, Change, get_error_dependency_node, PhysVar, get_token_unit_map
+DIR_HERE = os.path.dirname(__file__)
 
 class PhysFix:
-    def __init__(self):
-        pass
+    """Full pipeline for fixing unit inconsistencies in Phys"""
+    def __init__(self, source_file_path: str):
+        self.source_file_name = os.path.basename(source_file_path)
+        self.physfix_folder = os.path.join(DIR_HERE, "data")
+
+        # Copy source file into new folder
+        self.source_file_path = os.path.join(self.physfix_folder,
+                                             os.path.splitext(self.source_file_name)[0],
+                                             self.source_file_name)
+
+        if not os.path.exists(os.path.dirname(self.source_file_path)):
+            os.makedirs(os.path.dirname(self.source_file_path))
+
+        shutil.copy(source_file_path, self.source_file_path)
+
+    def run_phys(self, mount_path: str, file_path: str, output_path: str):
+        """Runs Phys on a file"""
+        subprocess.run([os.path.join(DIR_HERE, "run_phys.sh"), mount_path, file_path, output_path])
+
+    def fix(self):
+        output_path = os.path.join(self.physfix_folder,
+                                   os.path.splitext(self.source_file_name)[0],
+                                   f"{os.path.splitext(self.source_file_name)[0]}.json")
+
+        if not os.path.exists(output_path):
+            with open(output_path, "w") as _:
+                pass
+
+        self.run_phys(os.path.dirname(self.source_file_path), self.source_file_path, output_path)
 
     @staticmethod
     def load_srcml_xml(xml_path, strip_namespace=False):
@@ -24,16 +55,6 @@ class PhysFix:
 
         if strip_namespace:
             PhysFix._stripNs(it.getroot())
-        # for _, el in it:
-        #     prefix, has_namespace, postfix = el.tag.partition('}')
-        #     if has_namespace:
-        #         el.tag = postfix  # strip all namespaces
-
-        #     for n, v in el.items():
-        #         _, n_has_namespace, n_postfix = n.partition('}')
-        #         if n_has_namespace:
-        #             el.
-        # root = it.root
         return it
 
     @staticmethod
@@ -113,7 +134,7 @@ class PhysFix:
     def changes_to_xslt(srcml_xml, change: Change,
                         output_file_prefix):
         srcml_xml_root = srcml_xml.getroot()
-        token_to_fix = changes.token_to_fix
+        token_to_fix = change.token_to_fix
         token_to_fix_root = get_root_token(token_to_fix)
         statement_tokens = get_statement_tokens(token_to_fix_root)
         token_line_num = token_to_fix_root.linenr
@@ -192,87 +213,26 @@ class PhysFix:
         with open(f"{output_path}.cpp", "wb") as f:
             f.write(etree.tostring(t, method='text'))
 
-    @staticmethod
-    def apply_changes(srcml_xml, change: Change,
-                      output_file_prefix):
-        srcml_xml_root = srcml_xml.getroot()
-        token_to_fix = changes.token_to_fix
-        token_to_fix_root = get_root_token(token_to_fix)
-        statement_tokens = get_statement_tokens(token_to_fix_root)
-        token_line_num = token_to_fix_root.linenr
-        exprs = srcml_xml_root.findall(".//expr")
-        line_elem = []
-
-        # Find the xml line with the matching line number
-        for e in exprs:
-            if e.get("start").startswith(str(token_line_num)):
-                line_elem.append(e)
-
-        cur_token = statement_tokens[0]
-
-        elem_to_fix = None
-        elem_idx = None
-        elem_parent_map = {}
-        # Find the token to replace in the xml
-        for e_idx, e in enumerate(line_elem):
-            q = deque()
-            q.append((e_idx, e))
-
-            elem_found = False
-            while q:
-                idx, cur = q.popleft()
-
-                if cur.text:
-                    assert cur.text == cur_token.str, "Text not matching"
-                    if cur_token.Id == token_to_fix.Id:
-                        elem_found = True
-                        elem_to_fix = cur
-                        elem_idx = idx
-                        break
-
-                    cur_token = cur_token.next
-
-                for next_elem in cur:
-                    elem_parent_map[next_elem] = cur
-                    q.append((idx, next_elem))
-            
-            if elem_found:
-                break
-        
-        if elem_to_fix.text == "(":
-            elem_to_fix = elem_parent_map[elem_to_fix]
-
-        change_xml_elems = [PhysFix.root_token_to_xml(c) for c in change.changes]
-        elem_parent = elem_parent_map[elem_to_fix]
-        elem_parent.remove(elem_to_fix)
-        # For every change
-        for idx, c in enumerate(change_xml_elems):
-            # Insert the change into the xml
-            for i in range(len(c) - 1, -1, -1):
-                elem_parent.insert(elem_idx, c[i])
-
-            # Write xml
-            srcml_xml.write(f"{output_file_prefix}_{idx}.xml)")
-            # Delete changes
-            for _ in range(len(c)):
-                elem_parent.remove(elem_parent[elem_idx])
+    
 
 
-if __name__ == "__main__":
-    output = "/home/rewong/phys/src/test_19_output.json"
-    dump = "/home/rewong/phys/physfix/tests/dump_to_ast_test/test_19.cpp.dump"
+def main():
+    phys_fix = PhysFix("/home/rewong/phys/physfix/tests/dump_to_ast_test/test_19.cpp")
+    phys_fix.fix()
+    # output = "/home/rewong/phys/src/test_19_output.json"
+    # dump = "/home/rewong/phys/physfix/tests/dump_to_ast_test/test_19.cpp.dump"
 
-    cppconfig = CppcheckData(dump).configurations[0]
-    cfgs = ASTToCFG().convert(dump)
-    d_graphs = [CFGToDependencyGraph().create_dependency_graph(c) for c in cfgs]
+    # cppconfig = CppcheckData(dump).configurations[0]
+    # cfgs = ASTToCFG().convert(dump)
+    # d_graphs = [CFGToDependencyGraph().create_dependency_graph(c) for c in cfgs]
 
-    e = Error.from_dict(output)
-    # print(e)
-    e_dependency = get_error_dependency_node(e[0], d_graphs)
-    phys_vars = PhysVar.from_dict(output)
-    var_unit_map = PhysVar.create_unit_map(phys_vars)
-    token_unit_map = get_token_unit_map(output)
-    changes = fix_addition_subtraction(e[0], var_unit_map, token_unit_map)
+    # e = Error.from_dict(output)
+    # # print(e)
+    # e_dependency = get_error_dependency_node(e[0], d_graphs)
+    # phys_vars = PhysVar.from_dict(output)
+    # var_unit_map = PhysVar.create_unit_map(phys_vars)
+    # token_unit_map = get_token_unit_map(output)
+    # changes = fix_addition_subtraction(e[0], var_unit_map, token_unit_map)
     # cfgs = ASTToCFG().convert(dump)
     # d_graphs = [CFGToDependencyGraph().create_dependency_graph(c) for c in cfgs]
 
@@ -282,10 +242,10 @@ if __name__ == "__main__":
     # print(d_graphs[0])
     # print(d_graphs[0].get_node_connected_components(e_dependency[1]))
 
-    x = PhysFix.load_srcml_xml("/home/rewong/phys/physfix/test_src_ml.xml",
-    strip_namespace=True)
-    PhysFix.changes_to_xslt(x, changes, "test_19_fix")
-    y = PhysFix.load_srcml_xml("/home/rewong/phys/physfix/test_19_fix_0.xml")
-    PhysFix.apply_xslt(x, y, "test_result")
+    # x = PhysFix.load_srcml_xml("/home/rewong/phys/physfix/test_src_ml.xml",
+    # strip_namespace=True)
+    # PhysFix.changes_to_xslt(x, changes, "test_19_fix")
+    # y = PhysFix.load_srcml_xml("/home/rewong/phys/physfix/test_19_fix_0.xml")
+    # PhysFix.apply_xslt(x, y, "test_result")
     # print([q for q in r.findall(".//{http://www.srcML.org/srcML/src}expr")[0]])
 

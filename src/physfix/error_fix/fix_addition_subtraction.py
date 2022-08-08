@@ -1,18 +1,16 @@
 from __future__ import annotations
 
-import json
-from collections import deque
-from typing import Dict, List, Set, Union
 import uuid
+from typing import Dict, Union
 
-import attr
-
-from phys.physfix.parse.cpp_parser import Token, Variable
-from physfix.src.physfix.ast_to_cfg import ASTToCFG, CFGNode, FunctionCFG
-from phys.physfix.parse.cpp_utils import get_LHS_from_statement, get_RHS_from_statement, get_statement_tokens, get_vars_from_statement, token_to_stmt_str, tokens_to_str, tokens_to_tree
-from dependency_graph import CFGToDependencyGraph, DependencyGraph
-from physfix.src.physfix.error_fixes.phys_fix_utils import Error, PhysVar, get_error_dependency_node, get_token_unit_map, Change
-
+from physfix.dataflow.ast_to_cfg import ASTToCFG
+from physfix.dataflow.dependency_graph import (CFGToDependencyGraph)
+from physfix.error_fix.phys_fix_utils import (Change, Error, PhysVar,
+                                              get_error_dependency_node,
+                                              get_token_unit_map)
+from physfix.parse.cpp_parser import Token, Variable
+from physfix.parse.cpp_utils import (get_statement_tokens,
+                                     get_vars_from_statement)
 
 
 def multiply_units(u1: Dict[str, Union[int, float]], u2: Dict[str, Union[int, float]]):
