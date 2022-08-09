@@ -7,6 +7,7 @@ from collections import deque
 
 from lxml import etree
 
+from physfix.parse.dump_to_ast import DumpToAST
 from physfix.dataflow.ast_to_cfg import ASTToCFG
 from physfix.dataflow.dependency_graph import CFGToDependencyGraph
 from physfix.error_fix.fix_addition_subtraction import fix_addition_subtraction
@@ -34,31 +35,66 @@ class PhysFix:
 
         shutil.copy(source_file_path, self.source_file_path)
 
+        self.source_directory = os.path.dirname(self.source_file_path)
+
     def run_phys(self, mount_path: str, file_path: str, output_path: str):
         """Runs Phys on a file"""
         subprocess.run([os.path.join(DIR_HERE, "run_phys.sh"), mount_path, file_path, output_path])
 
-    def fix(self):
-        output_path = os.path.join(self.physfix_folder,
-                                   os.path.splitext(self.source_file_name)[0],
-                                   f"{os.path.splitext(self.source_file_name)[0]}.json")
+    def run_source_ml(self, file_path: str, ouput_path: str):
+        """Runs srcml on a file"""
+        subprocess.run(["srcml", "--position", file_path, "-o", ouput_path])
 
-        if not os.path.exists(output_path):
-            with open(output_path, "w") as _:
+    def fix(self):
+        phys_output_path = os.path.join(self.source_directory,
+                                        f"{os.path.splitext(self.source_file_name)[0]}.json")
+
+        if not os.path.exists(phys_output_path):
+            with open(phys_output_path, "w") as _:
                 pass
 
-        self.run_phys(os.path.dirname(self.source_file_path), self.source_file_path, output_path)
+        self.run_phys(os.path.dirname(self.source_file_path), self.source_file_path, phys_output_path)
+        
+        # Get AST/CFG/DependencyGraph
+        dump_to_ast = DumpToAST(f"{self.source_file_path}.dump")
+        dump_to_ast.convert()
+        ast_to_cfg = ASTToCFG(dump_to_ast)
+        ast_to_cfg.convert()
+        cfg_to_dependency = CFGToDependencyGraph(ast_to_cfg)
+        cfg_to_dependency.convert()
+        dependency_graph = cfg_to_dependency.dependency_graph
 
-    @staticmethod
-    def load_srcml_xml(xml_path, strip_namespace=False):
+        # Get errors arbitrarily for now (and only addition/subtraction)
+        phys_errors = [e for e in Error.from_dict(phys_output_path) if e.error_type == "ADDITION_OF_INCOMPATIBLE_UNITS"]
+        
+        if not phys_errors:
+            return
+
+        phys_vars = PhysVar.from_dict(phys_output_path)
+        var_unit_map = PhysVar.create_unit_map(phys_vars)
+        token_unit_map = get_token_unit_map(phys_output_path)
+        # Currently only fix one bug for now
+        get_error_dependency_node(phys_errors[0], dependency_graph)
+        change = fix_addition_subtraction(phys_errors[0], var_unit_map, token_unit_map)
+
+        # Get srcml file
+        srcml_output_path = os.path.join(self.source_directory,
+                                         f"{os.path.splitext(self.source_file_name)[0]}.xml")
+        self.run_source_ml(self.source_file_path, srcml_output_path)
+        srcml_xml = self.load_srcml_xml(srcml_output_path, strip_namespace=True)
+
+        # Create XLST files
+        xslt_output_prefix = os.path.join(self.source_directory, f"{self.source_file_name}_patch")
+        self.changes_to_xslt(srcml_xml, change, xslt_output_prefix)
+        
+    def load_srcml_xml(self, xml_path, strip_namespace=False):
         it = etree.parse(xml_path)
 
         if strip_namespace:
-            PhysFix._stripNs(it.getroot())
+            self._stripNs(it.getroot())
         return it
 
-    @staticmethod
-    def _stripNs(el):
+    def _stripNs(self, el):
         '''Recursively search this element tree, removing namespaces.'''
         if el.tag.startswith("{"):
             el.tag = el.tag.split('}', 1)[1]  # strip namespace
@@ -69,10 +105,9 @@ class PhysFix:
                 el.attrib[k2] = el.attrib[k]
                 del el.attrib[k]
         for child in el:
-            PhysFix._stripNs(child)
+            self._stripNs(child)
 
-    @staticmethod
-    def root_token_to_xml(token):
+    def root_token_to_xml(self, token):
         """Takes root token and turns it into xml elements"""
         if not token:
             return []
@@ -84,7 +119,6 @@ class PhysFix:
         # if token.astOperand2:
         #     print(f"right: {tokens_to_str([token.astOperand2])}")
 
-
         xml_elems = []
         if token.variableId:
             elem = etree.Element("name")
@@ -95,8 +129,8 @@ class PhysFix:
                 elem = etree.Element("operator")
                 elem.text = token.str
                 mid = [elem]
-                left = PhysFix.root_token_to_xml(token.astOperand1)
-                right = PhysFix.root_token_to_xml(token.astOperand2)
+                left = self.root_token_to_xml(token.astOperand1)
+                right = self.root_token_to_xml(token.astOperand2)
                 xml_elems = left + mid + right
             elif token.str == "(":
                 left = etree.Element("call")
@@ -111,28 +145,26 @@ class PhysFix:
                     arg = etree.SubElement(mid, "argument")
                     arg.tail = ","
                     arg = etree.SubElement(arg, "expr")
-                    arg = arg.extend(PhysFix.root_token_to_xml(cur.astOperand1))
+                    arg = arg.extend(self.root_token_to_xml(cur.astOperand1))
 
                     cur = cur.astOperand2
 
                 if cur:
                     arg = etree.SubElement(mid, "argument")
                     arg = etree.SubElement(arg, "expr")
-                    arg = arg.extend(PhysFix.root_token_to_xml(cur))
+                    arg = arg.extend(self.root_token_to_xml(cur))
 
                 xml_elems.append(left)
             else:
                 mid = [etree.Element("literal")]
                 mid[0].text = token.str
-                left = PhysFix.root_token_to_xml(token.astOperand1)
-                right = PhysFix.root_token_to_xml(token.astOperand2)
+                left = self.root_token_to_xml(token.astOperand1)
+                right = self.root_token_to_xml(token.astOperand2)
                 xml_elems = left + mid + right
 
         return xml_elems
 
-    @staticmethod
-    def changes_to_xslt(srcml_xml, change: Change,
-                        output_file_prefix):
+    def changes_to_xslt(self, srcml_xml, change: Change, output_file_prefix):
         srcml_xml_root = srcml_xml.getroot()
         token_to_fix = change.token_to_fix
         token_to_fix_root = get_root_token(token_to_fix)
@@ -178,10 +210,10 @@ class PhysFix:
         if elem_to_fix.text == "(":
             elem_to_fix = elem_parent_map[elem_to_fix]
 
-        change.changes = [change.changes[0]]
-        change_xml_elems = [PhysFix.root_token_to_xml(c) for c in change.changes]
+        change_xml_elems = [self.root_token_to_xml(c) for c in change.changes]
 
         for idx, change_sub_elem in enumerate(change_xml_elems):
+            print(idx)
             xslt_root = etree.XML('''<?xml version = "1.0"?>
     <xsl:stylesheet version = "1.0" 
     xmlns:xsl = "http://www.w3.org/1999/XSL/Transform">
@@ -196,11 +228,6 @@ class PhysFix:
                                           match=f"//{elem_to_fix.tag}[@start='{elem_to_fix.get('start')}'][@end='{elem_to_fix.get('end')}']")
             xslt_match.extend(change_sub_elem)
             xslt_tree.write(f"{output_file_prefix}_{idx}.xml")
-        # print(str(etree.tostring(xslt_tree, pretty_print=True)))
-        transform = etree.XSLT(xslt_root)
-        t = transform(srcml_xml)
-        with open("test_result.xml", "wb") as f:
-            f.write(etree.tostring(t, method='text'))
 
     @staticmethod
     def apply_xslt(srcml_xml, xslt, output_path):

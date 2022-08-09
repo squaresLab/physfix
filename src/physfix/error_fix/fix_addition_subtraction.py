@@ -10,7 +10,8 @@ from physfix.error_fix.phys_fix_utils import (Change, Error, PhysVar,
                                               get_token_unit_map)
 from physfix.parse.cpp_parser import Token, Variable
 from physfix.parse.cpp_utils import (get_statement_tokens,
-                                     get_vars_from_statement)
+                                     get_vars_from_statement, get_lhs_from_statement,
+                                     get_rhs_from_statement)
 
 
 def multiply_units(u1: Dict[str, Union[int, float]], u2: Dict[str, Union[int, float]]):
@@ -244,8 +245,8 @@ def fix_addition_subtraction(error: Error, phys_var_map: Dict[str, PhysVar], tok
                              max_fixes=5):
     """Make sure to run get_error_dependency_node on error before this"""
     error_tokens = get_statement_tokens(error.root_token)
-    lhs_tokens = get_LHS_from_statement(error_tokens)
-    rhs_tokens = get_RHS_from_statement(error_tokens)
+    lhs_tokens = get_lhs_from_statement(error_tokens)
+    rhs_tokens = get_rhs_from_statement(error_tokens)
     
     # Assume LHS only has one variable
     lhs_var = get_vars_from_statement(lhs_tokens)[0]
