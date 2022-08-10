@@ -254,7 +254,7 @@ class ASTToCFG:
 
 def main():
     # e_count = 0
-    test_path = f"/home/rewong/physfix/tests/ast_to_cfg_test/test_12.cpp.dump"
+    test_path = "/home/rewong/physfix/tests/ast_to_cfg_test/test_12.cpp.dump"
     dump_to_ast = DumpToAST(test_path)
     ast_to_cfg = ASTToCFG(dump_to_ast)
     cfg = ast_to_cfg.convert()

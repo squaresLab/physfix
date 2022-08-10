@@ -31,7 +31,7 @@ class DependencyNode:
         return str(self.to_dict())
 
 
-@attr.s()
+@attr.s(eq=False)
 class DependencyGraph:
     cfg: FunctionCFG = attr.ib()
     nodes: List[DependencyNode] = attr.ib()
