@@ -1,4 +1,4 @@
-from typing import Dict, List, Set, Union
+from typing import Dict, List, Optional, Set
 
 from .cpp_parser import Configuration, Scope, Token, Variable
 
@@ -7,7 +7,7 @@ def get_statement_tokens(token: Token) -> List[Token]:
     """Returns tokens in token tree in inorder"""
     if not token:
         return []
-    elif not(token.astOperand1 or token.astOperand2):
+    elif not (token.astOperand1 or token.astOperand2):
         return [token]
 
     return get_statement_tokens(token.astOperand1) + [token] + get_statement_tokens(token.astOperand2)
@@ -26,7 +26,7 @@ def get_vars_from_statement(tokens: List[Token]) -> List[Variable]:
 def get_lhs_from_statement(tokens: List[Token]) -> List[Token]:
     """Returns the tokens of the LHS of an expression"""
     for idx, t in enumerate(tokens):
-        if "=" == t.str:
+        if t.str == "=":
             return tokens[:idx]
 
 
@@ -35,8 +35,8 @@ def get_rhs_from_statement(tokens: List[Token]) -> List[Token]:
     Returns the tokens of the RHS of an expression
     """
     for idx, t in enumerate(tokens):
-        if "=" == t.str:
-            return tokens[idx:]
+        if t.str == "=":
+            return tokens[idx + 1:]
 
 
 def tokens_to_str(tokens: List[Token]) -> List[str]:
@@ -63,11 +63,11 @@ def get_root_tokens(token_start: Token, token_end: Token) -> List[Token]:
     """
     root_tokens_set: Set[Token] = set()
     root_tokens = []
-    current_token: Union[Token, None] = token_start
+    current_token: Optional[Token] = token_start
 
-    while current_token is not None and current_token != token_end:  #todo: reverse token set exploration to top-down instead of bottom-up
+    while current_token is not None and current_token != token_end:  # todo: reverse token set exploration to top-down instead of bottom-up
         # HAS A PARENT
-        if current_token.astParent: 
+        if current_token.astParent:
             token_parent = current_token.astParent
             has_parent = True
             while has_parent:
