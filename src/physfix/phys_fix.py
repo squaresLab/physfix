@@ -5,6 +5,7 @@ import shutil
 import subprocess
 from collections import deque
 from copy import deepcopy
+from typing import List
 
 from lxml import etree
 
@@ -15,6 +16,7 @@ from physfix.error_fix.error_fix_utils import (Change, Error, PhysVar,
                                                get_root_errors,
                                                get_token_unit_map)
 from physfix.error_fix.fix_addition_subtraction import fix_addition_subtraction
+from physfix.error_fix.fix_comparison import fix_comparison
 from physfix.parse.cpp_utils import get_root_token, get_statement_tokens
 from physfix.parse.dump_to_ast import DumpToAST
 
@@ -79,7 +81,13 @@ class PhysFix:
         var_unit_map = PhysVar.create_unit_map(phys_vars)
         token_unit_map = get_token_unit_map(phys_output_path)
         # Currently only fix one bug for now
-        change = fix_addition_subtraction(phys_errors[0], var_unit_map, token_unit_map)
+
+        change = []
+        for e in phys_errors:
+            if e.error_type == "ADDITION_OF_INCOMPATIBLE_UNITS":
+                change.extend(fix_addition_subtraction(phys_errors[0], var_unit_map, token_unit_map))
+            elif e.error_type == "COMPARISON_INCOMPATIBLE_UNITS":
+                change.extend(fix_comparison(phys_errors[0], var_unit_map, token_unit_map))
 
         # Get srcml file
         srcml_output_path = os.path.join(self.source_directory,
@@ -173,74 +181,76 @@ class PhysFix:
 
         return xml_elems
 
-    def changes_to_xslt(self, srcml_xml, change: Change, output_file_prefix) -> str:
+    def changes_to_xslt(self, srcml_xml, changes: List[Change], output_file_prefix) -> str:
         """Creates XSLT files for changes and ouputs paths of files"""
-        srcml_xml_root = srcml_xml.getroot()
-        token_to_fix = change.token_to_fix
-        token_to_fix_root = get_root_token(token_to_fix)
-        statement_tokens = get_statement_tokens(token_to_fix_root)
-        token_line_num = token_to_fix_root.linenr
-        exprs = srcml_xml_root.findall(".//expr")
-        line_elem = []
-
-        # Find the xml line with the matching line number
-        for e in exprs:
-            if e.get("start").startswith(str(token_line_num)):
-                line_elem.append(e)
-
-        cur_token = statement_tokens[0]
-
-        elem_to_fix = None
-        elem_parent_map = {}
-        # Find the token to replace in the xml
-        for e_idx, e in enumerate(line_elem):
-            q = deque()
-            q.append((e_idx, e))
-
-            elem_found = False
-            while q:
-                idx, cur = q.popleft()
-
-                if cur.text:
-                    assert cur.text == cur_token.str, "Text not matching"
-                    if cur_token.Id == token_to_fix.Id:
-                        elem_found = True
-                        elem_to_fix = cur
-                        break
-
-                    cur_token = cur_token.next
-
-                for next_elem in cur:
-                    elem_parent_map[next_elem] = cur
-                    q.append((idx, next_elem))
-            
-            if elem_found:
-                break
-        
-        if elem_to_fix.text == "(":
-            elem_to_fix = elem_parent_map[elem_to_fix]
-
-        change_xml_elems = [self.root_token_to_xml(c) for c in change.changes]
-
         xslt_paths = []
-        for idx, change_sub_elem in enumerate(change_xml_elems):
-            xslt_root = etree.XML('''<?xml version = "1.0"?>
-    <xsl:stylesheet version = "1.0" 
-    xmlns:xsl = "http://www.w3.org/1999/XSL/Transform">
-        <xsl:template match="@*|node()">
-            <xsl:copy>
-                <xsl:apply-templates select="@*|node()"/>
-            </xsl:copy>
-        </xsl:template>
-    </xsl:stylesheet>''')
-            xslt_tree = etree.ElementTree(xslt_root)
-            xslt_match = etree.SubElement(xslt_tree.getroot(), "{http://www.w3.org/1999/XSL/Transform}template",
-                                          match=f"//{elem_to_fix.tag}[@start='{elem_to_fix.get('start')}'][@end='{elem_to_fix.get('end')}']")
-            xslt_match.extend(change_sub_elem)
-            xslt_path = f"{output_file_prefix}_{idx}.xml"
-            xslt_tree.write(xslt_path)
+        for c_idx, c in enumerate(changes):
+            srcml_xml_root = srcml_xml.getroot()
+            token_to_fix = c.token_to_fix
+            token_to_fix_root = get_root_token(token_to_fix)
+            statement_tokens = get_statement_tokens(token_to_fix_root)
+            token_line_num = token_to_fix_root.linenr
+            exprs = srcml_xml_root.findall(".//expr")
+            line_elem = []
 
-            xslt_paths.append(xslt_path)
+            # Find the xml line with the matching line number
+            for e in exprs:
+                if e.get("start").startswith(str(token_line_num)):
+                    line_elem.append(e)
+
+            cur_token = statement_tokens[0]
+
+            elem_to_fix = None
+            elem_parent_map = {}
+            # Find the token to replace in the xml
+            for e_idx, e in enumerate(line_elem):
+                q = deque()
+                q.append((e_idx, e))
+
+                elem_found = False
+                while q:
+                    idx, cur = q.popleft()
+
+                    if cur.text:
+                        assert cur.text == cur_token.str, "Text not matching"
+                        if cur_token.Id == token_to_fix.Id:
+                            elem_found = True
+                            elem_to_fix = cur
+                            break
+
+                        cur_token = cur_token.next
+
+                    for next_elem in cur:
+                        elem_parent_map[next_elem] = cur
+                        q.append((idx, next_elem))
+                
+                if elem_found:
+                    break
+            
+            if elem_to_fix.text == "(":
+                elem_to_fix = elem_parent_map[elem_to_fix]
+
+            change_xml_elems = [self.root_token_to_xml(c) for c in c.changes]
+
+            xslt_paths = []
+            for idx, change_sub_elem in enumerate(change_xml_elems):
+                xslt_root = etree.XML('''<?xml version = "1.0"?>
+        <xsl:stylesheet version = "1.0" 
+        xmlns:xsl = "http://www.w3.org/1999/XSL/Transform">
+            <xsl:template match="@*|node()">
+                <xsl:copy>
+                    <xsl:apply-templates select="@*|node()"/>
+                </xsl:copy>
+            </xsl:template>
+        </xsl:stylesheet>''')
+                xslt_tree = etree.ElementTree(xslt_root)
+                xslt_match = etree.SubElement(xslt_tree.getroot(), "{http://www.w3.org/1999/XSL/Transform}template",
+                                              match=f"//{elem_to_fix.tag}[@start='{elem_to_fix.get('start')}'][@end='{elem_to_fix.get('end')}']")
+                xslt_match.extend(change_sub_elem)
+                xslt_path = f"{output_file_prefix}_{c_idx}_{idx}.xslt"
+                xslt_tree.write(xslt_path)
+
+                xslt_paths.append(xslt_path)
 
         return xslt_paths
 
@@ -256,7 +266,8 @@ class PhysFix:
             f.write(etree.tostring(t, method='text'))
 
 def main():
-    phys_fix = PhysFix("/home/rewong/physfix/extern/phys/data/FrenchVanilla/src/turtlebot_example/src/turtlebot_example_node.cpp")
+    # phys_fix = PhysFix("/home/rewong/physfix/extern/phys/data/FrenchVanilla/src/turtlebot_example/src/turtlebot_example_node.cpp")
+    phys_fix = PhysFix("/home/rewong/physfix/tests/dump_to_ast_test/test_21.cpp")
     phys_fix.fix()
     # output = "/home/rewong/phys/src/test_19_output.json"
     # dump = "/home/rewong/phys/physfix/tests/dump_to_ast_test/test_19.cpp.dump"

@@ -37,8 +37,20 @@ class Error:
 
             for d in dependency_graphs:
                 for n in d.nodes:
+                    # TODO: Implies that addition/subtraction inconsistencies only happen in basic blocks, need to fix
+                    # if e_obj.error_type == "ADDITION_OF_INCOMPATIBLE_UNITS" and n.cfgnode.get_type() == "basic":
                     if n.cfgnode.get_type() == "basic":
                         if n.cfgnode.token.Id == e_obj.root_token_id:
+                            e_obj.root_token = n.cfgnode.token
+                            e_obj.cfgnode = n.cfgnode
+                            e_obj.dependency_node = n
+                            e_obj.dependency_graph = d
+                            for t in get_statement_tokens(e_obj.root_token):
+                                if t.Id == e_obj.error_token_id:
+                                    e_obj.error_token = t
+                                    break
+                    elif n.cfgnode.get_type() == "conditional":
+                        if n.cfgnode.condition.Id == e_obj.root_token_id:
                             e_obj.root_token = n.cfgnode.token
                             e_obj.cfgnode = n.cfgnode
                             e_obj.dependency_node = n
@@ -122,6 +134,7 @@ def dependency_node_to_error_map(errors) -> Dict[Tuple[DependencyGraph, Dependen
 def get_connected_errors(errors: List[Error]) -> List[Set[Error]]:
     """Returns list of sets of errors which are connected in the dependency graph"""
     dependency_error_map = dependency_node_to_error_map(errors)
+    print(errors)
 
     connected_errors: List[Set[Error]] = []
     seen = set()
@@ -137,6 +150,9 @@ def get_connected_errors(errors: List[Error]) -> List[Set[Error]]:
             cur = q.pop()
 
             if cur in seen:
+                continue
+
+            if not (cur[0] and cur[1]):
                 continue
 
             connected.extend(dependency_error_map[cur])

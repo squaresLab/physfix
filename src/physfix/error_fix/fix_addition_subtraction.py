@@ -71,7 +71,7 @@ def fix_addition_subtraction(error: Error, phys_var_map: Dict[str, PhysVar], tok
                                                   error.dependency_node, error.dependency_graph)[:max_fixes]
     
     # Returns token to be replaced and all candidate replacements
-    return Change(token_to_fix, candidate_changes)
+    return [Change(token_to_fix, candidate_changes)]
 
 
 if __name__ == "__main__":

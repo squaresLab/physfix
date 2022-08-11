@@ -22,7 +22,7 @@ class DependencyNode:
         """Serializes DepenencyNode to dict"""
         dependency_node_dict = {
             "node": self.cfgnode.to_dict(),
-            "variable": self.variable.nameToken.str,
+            "variable": self.variable.nameToken.str if self.variable else None,
         }
 
         return dependency_node_dict
@@ -190,7 +190,7 @@ class CFGToDependencyGraph:
             cur_use: Set[Variable] = def_use_pairs[cur_node].use
             remove = set()
 
-            if not cur_def:
+            if not (cur_use or cur_def):
                 continue
 
             for r in reach_def:
@@ -204,13 +204,21 @@ class CFGToDependencyGraph:
 
         cfg_dependency_node_mapping = {}  # Maps CFGNode to set of DependencyNodes
         dependency_graph_nodes = []  # All DependencyNodes
+        # print([x.get_type() for x in node_dependency_mapping])
         # Create all nodes of dependency graph for all variables in each node
         for cur_node in node_dependency_mapping:
             cfg_dependency_node_mapping[cur_node] = set()
             cur_def = def_use_pairs[cur_node].define
 
+            if not cur_def:
+                d_node = DependencyNode(cur_node, None)
+                cfg_dependency_node_mapping[(cur_node, None)] = {d_node}
+                dependency_graph_nodes.append(d_node)
+
             for def_var in cur_def:
-                cfg_dependency_node_mapping[(cur_node, def_var)] = set()
+                if (cur_node, def_var) not in cfg_dependency_node_mapping:
+                    cfg_dependency_node_mapping[(cur_node, def_var)] = set()
+
                 d_node = DependencyNode(cur_node, def_var)
                 dependency_graph_nodes.append(d_node)
                 cfg_dependency_node_mapping[(cur_node, def_var)].add(d_node)
@@ -218,6 +226,8 @@ class CFGToDependencyGraph:
         # Set previous and next nodes for all dependency nodes
         for d in dependency_graph_nodes:
             reach_def = node_dependency_mapping[d.cfgnode]
+            print(reach_def)
+            print(d)
 
             for r in reach_def:
                 prev = cfg_dependency_node_mapping[(r.def_node, r.variable)]
@@ -228,6 +238,7 @@ class CFGToDependencyGraph:
 
         dependency_graph = DependencyGraph(cfg, dependency_graph_nodes, reach_definitions,
                                            def_use_pairs)
+        print([x.cfgnode.get_type() for x in dependency_graph_nodes])
         return dependency_graph
 
 
