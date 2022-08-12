@@ -142,7 +142,7 @@ class PhysFix:
             elem.text = token.str
             return [elem]
         else:
-            if token.str in "*/+-":
+            if token.str in "*/+-<>" or token.str in ["<=", ">="]:
                 elem = etree.Element("operator")
                 elem.text = token.str
                 mid = [elem]
@@ -184,6 +184,7 @@ class PhysFix:
     def changes_to_xslt(self, srcml_xml, changes: List[Change], output_file_prefix) -> str:
         """Creates XSLT files for changes and ouputs paths of files"""
         xslt_paths = []
+
         for c_idx, c in enumerate(changes):
             srcml_xml_root = srcml_xml.getroot()
             token_to_fix = c.token_to_fix
@@ -200,6 +201,16 @@ class PhysFix:
 
             cur_token = statement_tokens[0]
 
+            # TODO: This is because the xpath matches to what's inside the () of if statment, not the
+            # if statment itself
+            if cur_token.str == "if":
+                cur_token = statement_tokens[2]
+            print(token_to_fix)
+            print(token_to_fix_root)
+            print(statement_tokens)
+            print(cur_token)
+            print([x.text for x in list(line_elem[0])])
+
             elem_to_fix = None
             elem_parent_map = {}
             # Find the token to replace in the xml
@@ -212,6 +223,7 @@ class PhysFix:
                     idx, cur = q.popleft()
 
                     if cur.text:
+                        print(cur.text, str(cur_token))
                         assert cur.text == cur_token.str, "Text not matching"
                         if cur_token.Id == token_to_fix.Id:
                             elem_found = True

@@ -226,8 +226,6 @@ class CFGToDependencyGraph:
         # Set previous and next nodes for all dependency nodes
         for d in dependency_graph_nodes:
             reach_def = node_dependency_mapping[d.cfgnode]
-            print(reach_def)
-            print(d)
 
             for r in reach_def:
                 prev = cfg_dependency_node_mapping[(r.def_node, r.variable)]
@@ -238,7 +236,7 @@ class CFGToDependencyGraph:
 
         dependency_graph = DependencyGraph(cfg, dependency_graph_nodes, reach_definitions,
                                            def_use_pairs)
-        print([x.cfgnode.get_type() for x in dependency_graph_nodes])
+        # print([x.cfgnode.get_type() for x in dependency_graph_nodes])
         return dependency_graph
 
 

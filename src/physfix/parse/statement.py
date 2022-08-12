@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Union
+import uuid
 
 import attr
 
@@ -137,6 +138,7 @@ class SwitchStatment(Statement):
     def _switch_to_if_else(self) -> IfStatement:
         """Converts a switch to an if/else. MUST run _add_breaks before"""
         equals_token: Token = Token(None)  # Hopefully this doesn't become a problem
+        equals_token.Id = uuid.uuid4()
         equals_token.str = "=="
         equals_token.astOperand1 = self.switch_expr
         equals_token.astOperand2 = self.match_expr

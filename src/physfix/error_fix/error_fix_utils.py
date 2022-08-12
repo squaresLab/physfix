@@ -6,6 +6,7 @@ from collections import deque
 from typing import Dict, List, Set, Tuple, Union
 
 import attr
+from physfix.parse.cpp_utils import get_root_token
 from physfix.dataflow.ast_to_cfg import CFGNode
 from physfix.dataflow.dependency_graph import DependencyGraph, DependencyNode
 from physfix.parse.cpp_parser import Token, Variable
@@ -50,15 +51,13 @@ class Error:
                                     e_obj.error_token = t
                                     break
                     elif n.cfgnode.get_type() == "conditional":
-                        if n.cfgnode.condition.Id == e_obj.root_token_id:
-                            e_obj.root_token = n.cfgnode.token
+                        conditional_root = get_root_token(n.cfgnode.condition)
+                        if conditional_root.Id == e_obj.root_token_id:
+                            e_obj.root_token = conditional_root.astOperand2
                             e_obj.cfgnode = n.cfgnode
                             e_obj.dependency_node = n
                             e_obj.dependency_graph = d
-                            for t in get_statement_tokens(e_obj.root_token):
-                                if t.Id == e_obj.error_token_id:
-                                    e_obj.error_token = t
-                                    break
+                            e_obj.error_token = e_obj.root_token
 
             error_objs.append(e_obj)
 
@@ -134,7 +133,6 @@ def dependency_node_to_error_map(errors) -> Dict[Tuple[DependencyGraph, Dependen
 def get_connected_errors(errors: List[Error]) -> List[Set[Error]]:
     """Returns list of sets of errors which are connected in the dependency graph"""
     dependency_error_map = dependency_node_to_error_map(errors)
-    print(errors)
 
     connected_errors: List[Set[Error]] = []
     seen = set()

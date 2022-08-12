@@ -11,8 +11,10 @@ def fix_comparison(error: Error, phys_var_map: Dict[str, PhysVar], token_unit_ma
                    max_fixes=5):
     """Make sure to run get_error_dependency_node on error before this"""
     error_tokens = get_statement_tokens(error.root_token)
-    lhs_token_root = error.root_token.astOperand1
-    rhs_token_root = error.root_token.astOperand2
+    lhs_token_root = error.error_token.astOperand1
+    rhs_token_root = error.error_token.astOperand2
+    # print(lhs_token_root)
+    # print(rhs_token_root)
     # lhs_tokens = get_lhs_from_statement(error_tokens)
 
 
@@ -35,7 +37,7 @@ def fix_comparison(error: Error, phys_var_map: Dict[str, PhysVar], token_unit_ma
         lhs_unit = token_unit_map[lhs_token_root.Id]
 
     rhs_unit = None
-    if rhs_unit.variable:
+    if rhs_token_root.variable:
         rhs_unit = phys_var_map[rhs_token_root.variable.Id].units[0]
     else:
         rhs_unit = token_unit_map[rhs_token_root.Id]
