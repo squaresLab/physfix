@@ -25,12 +25,9 @@ class Error:
     error_token = attr.ib(default=None)
 
     @staticmethod
-    def from_dict(phys_output_path, dependency_graphs) -> List[Error]:
-        output_dict = {}
-        with open(phys_output_path) as f:
-            output_dict = json.load(f)
+    def from_dict(phys_output_dict, dependency_graphs) -> List[Error]:
         # print(output_dict)
-        error_dict = output_dict["errors"]
+        error_dict = phys_output_dict["errors"]
 
         error_objs = []
         for e in error_dict:
@@ -70,12 +67,9 @@ class PhysVar:
     units: List[Dict] = attr.ib()  # Units sorted by likelihood by Phys
 
     @staticmethod
-    def from_dict(phys_output_path) -> List[PhysVar]:
-        output_dict = {}
-        with open(phys_output_path) as f:
-            output_dict = json.load(f)
+    def from_dict(phys_output_dict) -> List[PhysVar]:
         # print(output_dict)
-        var_dict = output_dict["variables"]
+        var_dict = phys_output_dict["variables"]
 
         phys_var_objs = []
         for v in var_dict:
@@ -108,12 +102,8 @@ class Change:
     changes: List[Token] = attr.ib()
 
 
-def get_token_unit_map(phys_output_path):
-    output_dict = {}
-    with open(phys_output_path) as f:
-        output_dict = json.load(f)
-    # print(output_dict)
-    return output_dict["token_units"] 
+def get_token_unit_map(phys_output_dict):
+    return phys_output_dict["token_units"] 
 
 
 def dependency_node_to_error_map(errors) -> Dict[Tuple[DependencyGraph, DependencyNode], Set[Error]]:

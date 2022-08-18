@@ -1,5 +1,7 @@
 from __future__ import annotations
+from genericpath import exists
 
+import json
 import os
 import shutil
 import subprocess
@@ -22,9 +24,18 @@ from physfix.parse.dump_to_ast import DumpToAST
 
 DIR_HERE = os.path.dirname(__file__)
 
+class bcolors:
+	RED    = "\x1b[31m"
+	GREEN  = "\x1b[32m"
+	NORMAL = "\x1b[0m"
+
+
 class PhysFix:
     """Full pipeline for fixing unit inconsistencies in Phys"""
-    def __init__(self, source_file_path: str):
+    def __init__(self, source_file_path: str, max_fixes=5, interactive=False):
+        self.max_fixes = max_fixes
+        self.interactive = interactive
+
         self.source_file_name = os.path.basename(source_file_path)
         self.physfix_folder = os.path.join(DIR_HERE, "data")
 
@@ -40,23 +51,30 @@ class PhysFix:
 
         self.source_directory = os.path.dirname(self.source_file_path)
 
-    def run_phys(self, mount_path: str, file_path: str, output_path: str):
+    def run_phys(self, mount_path: str, file_path: str):
         """Runs Phys on a file"""
+        output_path = os.path.join(mount_path, "output.json")
+
+        if not os.path.exists(output_path):
+            with open(output_path, "w") as _:
+                pass
+
         subprocess.run([os.path.join(DIR_HERE, "run_phys.sh"), mount_path, file_path, output_path])
+
+        output_dict = None
+        with open(output_path) as f:
+            output_dict = json.load(f)
+
+        os.remove(output_path)
+
+        return output_dict
 
     def run_source_ml(self, file_path: str, ouput_path: str):
         """Runs srcml on a file"""
         subprocess.run(["srcml", "--position", file_path, "-o", ouput_path])
 
     def fix(self):
-        phys_output_path = os.path.join(self.source_directory,
-                                        f"{os.path.splitext(self.source_file_name)[0]}.json")
-
-        if not os.path.exists(phys_output_path):
-            with open(phys_output_path, "w") as _:
-                pass
-
-        self.run_phys(os.path.dirname(self.source_file_path), self.source_file_path, phys_output_path)
+        phys_output_dict = self.run_phys(os.path.dirname(self.source_file_path), self.source_file_path)
 
         # Get AST/CFG/DependencyGraph
         dump_to_ast = DumpToAST(f"{self.source_file_path}.dump")
@@ -68,7 +86,7 @@ class PhysFix:
         dependency_graph = cfg_to_dependency.dependency_graph
 
         # Get errors arbitrarily for now (and only addition/subtraction)
-        phys_errors = Error.from_dict(phys_output_path, dependency_graph)
+        phys_errors = Error.from_dict(phys_output_dict, dependency_graph)
         connected_errors = get_connected_errors(phys_errors)
         root_errors = [get_root_errors(e) for e in connected_errors]
         phys_errors = root_errors
@@ -77,17 +95,79 @@ class PhysFix:
         if not phys_errors:
             return
 
-        phys_vars = PhysVar.from_dict(phys_output_path)
+        phys_vars = PhysVar.from_dict(phys_output_dict)
         var_unit_map = PhysVar.create_unit_map(phys_vars)
-        token_unit_map = get_token_unit_map(phys_output_path)
-        # Currently only fix one bug for now
+        token_unit_map = get_token_unit_map(phys_output_dict)
 
-        change = []
+        changes = []
         for e in phys_errors:
+            change = None
             if e.error_type == "ADDITION_OF_INCOMPATIBLE_UNITS":
-                change.extend(fix_addition_subtraction(phys_errors[0], var_unit_map, token_unit_map))
+                change = fix_addition_subtraction(e, var_unit_map, token_unit_map, 
+                                                  max_fixes=self.max_fixes)
             elif e.error_type == "COMPARISON_INCOMPATIBLE_UNITS":
-                change.extend(fix_comparison(phys_errors[0], var_unit_map, token_unit_map))
+                change = fix_comparison(e, var_unit_map, token_unit_map,
+                                        max_fixes=self.max_fixes)
+
+            if not change:
+                continue
+
+            if not self.interactive:
+                changes.extend(change)
+                continue
+
+            if e.error_type == "COMPARISON_INCOMPATIBLE_UNITS":
+                print("_______")
+                print(f"Error statement (Line {e.error_token.linenr}) has two possible statements to fix.")
+                print(f"Which would you like to fix?")
+
+                for idx, c in enumerate(change):
+                    error_message = [f"{idx + 1}."]
+                    error_statement = get_statement_tokens(get_root_token(c.token_to_fix))
+                    error_tokens = set(get_statement_tokens(c.token_to_fix))
+
+                    for t in error_statement:
+                        if t in error_tokens:
+                            error_message.append(f"{bcolors.RED}{t.str}{bcolors.NORMAL}")
+                        else:
+                            error_message.append(t.str)
+                
+                    print(" ".join(error_message))
+
+                change_input = None
+                while True:
+                    if change_input and change_input.isnumeric() and int(change_input) >= 0 and int(change_input) <= len(c.changes):
+                        break
+
+                    change_input = input("Input which statement to fix: ")
+
+                change = [change[int(change_input) - 1]]
+
+            change = change[0]
+            print("_______")
+            error_message = [f"Error statement (Line {change.token_to_fix.linenr}):"]
+            error_statement = get_statement_tokens(get_root_token(change.token_to_fix))
+            error_tokens = set(get_statement_tokens(change.token_to_fix))
+
+            for t in error_statement:
+                if t in error_tokens:
+                    error_message.append(f"{bcolors.RED}{t.str}{bcolors.NORMAL}")
+                else:
+                    error_message.append(t.str)
+
+            print(" ".join(error_message))
+            for idx in range(len(change.changes)):
+                print(f"{idx + 1}. {change.changes[idx]}")
+
+            change_input = None
+            while True:
+                if change_input and change_input.isnumeric() and int(change_input) >= 0 and int(change_input) <= len(change.changes):
+                    break
+
+                change_input = input("Input which change to use: ")
+
+            change.changes = [change.changes[int(change_input) - 1]]
+            changes.append(change)
 
         # Get srcml file
         srcml_output_path = os.path.join(self.source_directory,
@@ -98,9 +178,11 @@ class PhysFix:
         # Create XLST files
         xslt_output_prefix = os.path.join(self.source_directory, 
                                           f"{os.path.splitext(self.source_file_name)[0]}_patch")
-        xslt_path = self.changes_to_xslt(srcml_xml, change, xslt_output_prefix)
+        xslt_path = self.changes_to_xslt(srcml_xml, changes, xslt_output_prefix)
         
+        patched_files = []
         for path in xslt_path:
+            patched_files.append(f"{os.path.splitext(path)[0]}.cpp")
             self.apply_xslt(deepcopy(srcml_xml), path, 
                             f"{os.path.splitext(path)[0]}.cpp")
 
@@ -128,13 +210,6 @@ class PhysFix:
         """Takes root token and turns it into xml elements"""
         if not token:
             return []
-
-        # print("_____")
-        # print(f"Currently: {tokens_to_str([token])}")
-        # if token.astOperand1:
-        #     print(f"left: {tokens_to_str([token.astOperand1])}")
-        # if token.astOperand2:
-        #     print(f"right: {tokens_to_str([token.astOperand2])}")
 
         xml_elems = []
         if token.variableId:
@@ -205,11 +280,6 @@ class PhysFix:
             # if statment itself
             if cur_token.str == "if":
                 cur_token = statement_tokens[2]
-            print(token_to_fix)
-            print(token_to_fix_root)
-            print(statement_tokens)
-            print(cur_token)
-            print([x.text for x in list(line_elem[0])])
 
             elem_to_fix = None
             elem_parent_map = {}
@@ -223,7 +293,6 @@ class PhysFix:
                     idx, cur = q.popleft()
 
                     if cur.text:
-                        print(cur.text, str(cur_token))
                         assert cur.text == cur_token.str, "Text not matching"
                         if cur_token.Id == token_to_fix.Id:
                             elem_found = True
@@ -278,8 +347,8 @@ class PhysFix:
             f.write(etree.tostring(t, method='text'))
 
 def main():
-    # phys_fix = PhysFix("/home/rewong/physfix/extern/phys/data/FrenchVanilla/src/turtlebot_example/src/turtlebot_example_node.cpp")
-    phys_fix = PhysFix("/home/rewong/physfix/tests/dump_to_ast_test/test_21.cpp")
+    phys_fix = PhysFix("/home/rewong/physfix/extern/phys/data/FrenchVanilla/src/turtlebot_example/src/turtlebot_example_node.cpp")
+    # phys_fix = PhysFix("/home/rewong/physfix/tests/dump_to_ast_test/test_21.cpp", interactive=True)
     phys_fix.fix()
     # output = "/home/rewong/phys/src/test_19_output.json"
     # dump = "/home/rewong/phys/physfix/tests/dump_to_ast_test/test_19.cpp.dump"
