@@ -88,6 +88,7 @@ class PhysFix:
         # Get errors arbitrarily for now (and only addition/subtraction)
         phys_errors = Error.from_dict(phys_output_dict, dependency_graph)
         connected_errors = get_connected_errors(phys_errors)
+        # TODO: Right now we get the root error but there are also cases where the statement we should change doesn't have an error
         root_errors = [get_root_errors(e) for e in connected_errors]
         phys_errors = root_errors
         # phys_errors = [e for e in phys_errors if e.error_type == "ADDITION_OF_INCOMPATIBLE_UNITS"]
@@ -115,7 +116,8 @@ class PhysFix:
             if not self.interactive:
                 changes.extend(change)
                 continue
-
+            
+            # TODO: This is the beginnings of an interactive mode. Feel free to disregard/remove
             if e.error_type == "COMPARISON_INCOMPATIBLE_UNITS":
                 print("_______")
                 print(f"Error statement (Line {e.error_token.linenr}) has two possible statements to fix.")

@@ -36,7 +36,6 @@ class Error:
             for d in dependency_graphs:
                 for n in d.nodes:
                     # TODO: Implies that addition/subtraction inconsistencies only happen in basic blocks, need to fix
-                    # if e_obj.error_type == "ADDITION_OF_INCOMPATIBLE_UNITS" and n.cfgnode.get_type() == "basic":
                     if n.cfgnode.get_type() == "basic":
                         if n.cfgnode.token.Id == e_obj.root_token_id:
                             e_obj.root_token = n.cfgnode.token

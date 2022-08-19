@@ -6,29 +6,13 @@ from physfix.error_fix.error_fix_utils import (Change, Error, PhysVar, inverse_u
 from physfix.parse.cpp_utils import (get_statement_tokens,
                                      get_vars_from_statement, get_lhs_from_statement)
 
-
+# TODO: I think there's something wrong in the process of creating these changes because some tokens are missing after applying the change to source code
 def fix_comparison(error: Error, phys_var_map: Dict[str, PhysVar], token_unit_map: Dict[str, Dict],
                    max_fixes=5):
     """Make sure to run get_error_dependency_node on error before this"""
     error_tokens = get_statement_tokens(error.root_token)
     lhs_token_root = error.error_token.astOperand1
     rhs_token_root = error.error_token.astOperand2
-    # print(lhs_token_root)
-    # print(rhs_token_root)
-    # lhs_tokens = get_lhs_from_statement(error_tokens)
-
-
-    
-    # Assume LHS only has one variable
-    # lhs_var = get_vars_from_statement(lhs_tokens)[0]
-    # lhs_unit = phys_var_map[lhs_var.Id].units[0]
-
-    # # Walk from error token to root token and do inverse operations to find what unit the error var should have
-    # error_token = error.error_token
-    # error_correct_unit = inverse_unit(lhs_unit, error_token, phys_var_map, token_unit_map)
-    
-    # error_left_token = error_token.astOperand1
-    # error_right_token = error_token.astOperand2
     
     lhs_unit = None
     if lhs_token_root.variable:

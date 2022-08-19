@@ -9,6 +9,8 @@ from physfix.parse.cpp_parser import Token
 from physfix.parse.cpp_utils import token_to_stmt_str
 from physfix.parse.dump_to_ast import FunctionDeclaration
 
+# TODO: I use sets in a lot of these structures which was a bad design choice because it isn't hashable and is not deterministic
+# Might want to figure out how to move away from using sets
 
 class CFGNode(ABC):
     """Abstract class for CFGNode"""

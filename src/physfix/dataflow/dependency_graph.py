@@ -135,28 +135,29 @@ class DependencyGraph:
 
         return connected
 
-    def get_node_connected_components(self, dependency_node) -> Set[DependencyNode]:
-        """Gets all components connected to a node"""
-        connected = set()
-        seen = set()
-        q = deque()
-        q.append(dependency_node)
 
-        while q:
-            cur = q.pop()
-            if cur in seen:
-                continue
+    # def get_node_connected_components(self, dependency_node) -> Set[DependencyNode]:
+    #     """Gets all components connected to a node"""
+    #     connected = set()
+    #     seen = set()
+    #     q = deque()
+    #     q.append(dependency_node)
 
-            connected.add(cur)
+    #     while q:
+    #         cur = q.pop()
+    #         if cur in seen:
+    #             continue
 
-            for n in cur.next:
-                q.append(n)
-            for n in cur.previous:
-                q.append(n)
+    #         connected.add(cur)
 
-            seen.add(cur)
+    #         for n in cur.next:
+    #             q.append(n)
+    #         for n in cur.previous:
+    #             q.append(n)
 
-        return connected
+    #         seen.add(cur)
+
+    #     return connected
 
 
 class CFGToDependencyGraph:

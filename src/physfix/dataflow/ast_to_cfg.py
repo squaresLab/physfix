@@ -26,12 +26,15 @@ class ASTToCFG:
 
     def convert(self) -> List[FunctionCFG]:
         """Takes a dump file path and creates a CFG for each function"""
+        # For every function
         for f in self.function_declaration_objs:
+            # Make Entry/exit blocks
             entry_block = EntryBlock(f)
             exit_block = ExitBlock(f)
             f_cfg = FunctionCFG(f, entry_block)
             f_cfg.nodes.append(entry_block)
 
+            # Convert statements
             body = self._convert_statements(f.body, [(f.get_type(), entry_block, exit_block)], f_cfg)
             entry_block.next.add(body)
 
@@ -45,7 +48,8 @@ class ASTToCFG:
 
     def _convert_statements(self, statements: List[Statement], call_tree: List[Tuple[str, Statement, Statement]],
                             function_cfg: FunctionCFG) -> EntryBlock:
-        """call_tree is order of block calls and each item is tuple of the call + start block of call + the exit/join block of that call"""
+        """call_tree is order of block calls and each item is tuple of the call + start block of call + the exit/join block of that call.
+        It acts as a call stack."""
         sentinel = EmptyBlock()  # Sentinel node
         cur = sentinel  # Cur node in graph
 
@@ -211,6 +215,7 @@ class ASTToCFG:
         function_cfg.nodes.append(empty_return)
         return empty_return
 
+    # TODO: This function name is a bit confuring but basically it tries to find a path that doesn't go to an exit block
     def _convert_traverse(self, node: CFGNode) -> List[CFGNode]:
         """Traverses nodes of a CFG"""
 

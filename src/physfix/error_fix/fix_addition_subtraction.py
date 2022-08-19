@@ -67,6 +67,8 @@ def fix_addition_subtraction(error: Error, phys_var_map: Dict[str, PhysVar], tok
             else:
                 cur_token = cur_token.astOperand2
 
+    # TODO: This currently doesn't apply the rule a + b -> a * b
+
     candidate_changes = apply_unit_multiplication(token_to_fix, token_to_fix_unit, error_correct_unit, phys_var_map, 
                                                   error.dependency_node, error.dependency_graph)[:max_fixes]
     

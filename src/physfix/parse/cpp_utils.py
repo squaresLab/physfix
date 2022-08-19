@@ -31,9 +31,7 @@ def get_lhs_from_statement(tokens: List[Token]) -> List[Token]:
 
 
 def get_rhs_from_statement(tokens: List[Token]) -> List[Token]:
-    """
-    Returns the tokens of the RHS of an expression
-    """
+    """Returns the tokens of the RHS of an expression"""
     for idx, t in enumerate(tokens):
         if t.str == "=":
             return tokens[idx + 1:]
@@ -56,7 +54,7 @@ def get_root_token(t: Token) -> Token:
 
     return t
 
-
+# Copied from Phys
 def get_root_tokens(token_start: Token, token_end: Token) -> List[Token]:
     """ Takes the start and end tokens for a function and finds the root tokens
     of all statments in the function.
@@ -110,7 +108,7 @@ def get_function_statements(start_token: Token, end_token: Token, root_tokens: L
 
     return function_statements
 
-
+# Copied from Phys
 def get_functions(cppcheck_config: Configuration) -> Dict[str, Dict]:
     """Retrieves function information from Cppcheck Config obj."""
     function_dicts: Dict[str, Dict] = {}
